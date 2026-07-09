@@ -1,9 +1,8 @@
-<<<<<<< HEAD
 ﻿@model MiniSmartstoreMvc.Models.Product
 
 @{
-    ViewData["Title"] = "Thêm sản phẩm";
-    ViewBag.IsEdit = false;
+    ViewData["Title"] = "Sửa sản phẩm";
+    ViewBag.IsEdit = true;
 }
 
 <div class="admin-product-form-page">
@@ -17,12 +16,21 @@
                    title="Quay lại"></a>
 
                 <div>
-                    <h1>Thêm sản phẩm</h1>
-                    <p>Tạo sản phẩm mới, thiết lập giá bán, tồn kho, ảnh, danh mục và SEO.</p>
+                    <h1>Sửa sản phẩm - @Model.Name</h1>
+                    <p>Cập nhật thông tin, giá bán, kho hàng, hình ảnh, danh mục và SEO.</p>
                 </div>
             </div>
 
             <div class="admin-product-actions">
+                <a asp-area=""
+                   asp-controller="Product"
+                   asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   target="_blank"
+                   class="apf-btn apf-btn-soft">
+                    Xem ngoài shop
+                </a>
+
                 <button type="submit"
                         form="productForm"
                         name="saveMode"
@@ -38,10 +46,22 @@
                         class="apf-btn apf-btn-soft">
                     Lưu và tiếp tục sửa
                 </button>
+
+                <button type="submit"
+                        form="productForm"
+                        formaction="@Url.Action("Delete", "Product", new { area = "Admin", id = Model.Id })"
+                        formmethod="post"
+                        class="apf-btn apf-btn-danger"
+                        onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này không? Nếu sản phẩm đã nằm trong đơn hàng, hệ thống sẽ chỉ ẩn sản phẩm.');">
+                    Xóa
+                </button>
             </div>
         </div>
 
         <partial name="_Form" model="Model" />
+        <form id="productImageActionForm" method="post">
+            @Html.AntiForgeryToken()
+        </form>
     </div>
 </div>
 
@@ -53,8 +73,28 @@
             initAdminProductTabs();
             initAdminProductImagePreview();
             initAdminProductPricePreview();
+            initProductImageActionButtons();
         });
+        function initProductImageActionButtons() {
+            document.querySelectorAll(".js-product-image-action").forEach(function(button) {
+                button.addEventListener("click", function() {
+                    const url = this.dataset.url;
+                    const confirmMessage = this.dataset.confirm;
+                    const form = document.getElementById("productImageActionForm");
 
+                    if (!url || !form) {
+                        return;
+                    }
+
+                    if (confirmMessage && !confirm(confirmMessage)) {
+                        return;
+                    }
+
+                    form.action = url;
+                    form.submit();
+                });
+            });
+        }
         function initAdminProductTabs() {
             document.querySelectorAll(".apf-tab").forEach(function(button) {
                 button.addEventListener("click", function() {
@@ -116,16 +156,3 @@
         }
     </script>
 }
-=======
-﻿@model MiniSmartstoreMvc.ViewModels.AdminCategoryEditViewModel
-
-@{
-    ViewData["Title"] = "Add a new category";
-}
-
-<div class="admin-category-page">
-    <div class="admin-category-card">
-        <partial name="_Form" model="Model" />
-    </div>
-</div>
->>>>>>> a135520c87a1cc807d31f9b3d3434de3e81658fa
