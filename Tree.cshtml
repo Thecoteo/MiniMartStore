@@ -1,0 +1,106 @@
+﻿@model List<MiniSmartstoreMvc.ViewModels.AdminCategoryListItemViewModel>
+
+@{
+    ViewData["Title"] = "Cây danh mục";
+}
+
+<div class="admin-category-page">
+    <div class="admin-category-card">
+        <div class="admin-category-header">
+            <div class="admin-category-title-group">
+                <div>
+                    <h1>Cây danh mục</h1>
+                    <p>Xem cấu trúc danh mục cha và danh mục con.</p>
+                </div>
+
+                <div class="admin-category-view-switch">
+                    <a asp-area="Admin"
+                       asp-controller="Category"
+                       asp-action="List"
+                       class="admin-view-btn"
+                       title="Xem dạng danh sách">
+                        <span class="admin-css-icon admin-icon-list"></span>
+                    </a>
+
+                    <a asp-area="Admin"
+                       asp-controller="Category"
+                       asp-action="Tree"
+                       class="admin-view-btn active"
+                       title="Xem dạng cây danh mục">
+                        <span class="admin-css-icon admin-icon-tree"></span>
+                    </a>
+                </div>
+            </div>
+
+            <a asp-area="Admin"
+               asp-controller="Category"
+               asp-action="Create"
+               class="admin-primary-btn">
+                + Thêm danh mục
+            </a>
+        </div>
+
+        <div class="admin-tree-box">
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <div class="admin-tree-row" style="--level:@item.Level">
+                        <div class="admin-tree-main">
+                            <span class="admin-tree-line"></span>
+
+                            <span class="admin-tree-folder"></span>
+
+                            <a asp-area="Admin"
+                               asp-controller="Category"
+                               asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="admin-tree-name">
+                                @item.Name
+                            </a>
+
+                            <span class="admin-tree-count">
+                                @item.ProductCount sản phẩm
+                            </span>
+
+                            @if (!item.IsActive)
+                            {
+                                <span class="admin-tree-status off">
+                                    Đang ẩn
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="admin-tree-status on">
+                                    Hiển thị
+                                </span>
+                            }
+                        </div>
+
+                        <div class="admin-tree-actions">
+                            <a asp-area="Admin"
+                               asp-controller="Category"
+                               asp-action="Create"
+                               asp-route-parentId="@item.Id">
+                                Thêm danh mục con
+                            </a>
+
+                            <a asp-area="Admin"
+                               asp-controller="Category"
+                               asp-action="Edit"
+                               asp-route-id="@item.Id">
+                                Sửa
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="admin-empty-tree">
+                    Chưa có danh mục nào.
+                </div>
+            }
+        </div>
+    </div>
+</div>
