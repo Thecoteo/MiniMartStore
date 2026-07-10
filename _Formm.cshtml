@@ -1,0 +1,222 @@
+﻿@model MiniSmartstoreMvc.ViewModels.AdminCategoryEditViewModel
+
+@{
+    var isEdit = Model.Id > 0;
+    var title = isEdit ? "Sửa danh mục" : "Thêm danh mục mới";
+}
+
+<form method="post"
+      enctype="multipart/form-data"
+      class="admin-category-edit-form">
+    @Html.AntiForgeryToken()
+
+    <input asp-for="Id" type="hidden" />
+
+    <div class="admin-category-edit-header">
+        <a asp-area="Admin"
+           asp-controller="Category"
+           asp-action="List"
+           class="admin-back-btn"
+           title="Quay lại">
+            <span class="admin-css-icon admin-icon-back"></span>
+        </a>
+
+        <div class="admin-edit-actions">
+            <button type="submit" name="saveMode" value="save" class="admin-save-btn">
+                <span class="admin-css-icon admin-icon-check"></span>
+                <span>Lưu</span>
+            </button>
+
+            <button type="submit" name="saveMode" value="continue" class="admin-save-secondary-btn">
+                Lưu và tiếp tục sửa
+            </button>
+        </div>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="admin-category-edit-layout">
+        <div class="admin-category-form-tabs">
+            <button type="button"
+                    class="admin-tab-link active"
+                    data-tab="general">
+                <span class="admin-css-icon admin-icon-general"></span>
+                <span>Tổng quan</span>
+            </button>
+
+            <button type="button"
+                    class="admin-tab-link"
+                    data-tab="seo">
+                <span class="admin-css-icon admin-icon-seo"></span>
+                <span>SEO / Công cụ tìm kiếm</span>
+            </button>
+
+            <button type="button"
+                    class="admin-tab-link"
+                    data-tab="products">
+                <span class="admin-css-icon admin-icon-box"></span>
+                <span>Sản phẩm</span>
+            </button>
+        </div>
+
+        <section class="admin-category-tab-content">
+            <div class="admin-tab-panel active" id="tab-general">
+                <div class="admin-form-row">
+                    <label>Danh mục cha</label>
+                    <select asp-for="ParentCategoryId"
+                            asp-items="Model.ParentCategories"
+                            class="admin-input">
+                    </select>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Thứ tự hiển thị</label>
+                    <input asp-for="DisplayOrder" class="admin-input" type="number" />
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Đang hiển thị</label>
+                    <label class="admin-switch">
+                        <input asp-for="IsActive" />
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Hiển thị ở trang chủ</label>
+                    <label class="admin-switch">
+                        <input asp-for="ShowOnHomePage" />
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Hiển thị trên menu</label>
+                    <label class="admin-switch">
+                        <input asp-for="IncludeInMenu" />
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Tên danh mục</label>
+                    <div>
+                        <input asp-for="Name" class="admin-input" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Mô tả</label>
+                    <textarea asp-for="Description"
+                              class="admin-input"
+                              rows="4"
+                              placeholder="Mô tả ngắn cho danh mục..."></textarea>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Nhãn nổi bật</label>
+                    <input asp-for="BadgeText"
+                           class="admin-input"
+                           placeholder="Ví dụ: NEW, SALE..." />
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Ảnh danh mục</label>
+
+                    <div class="admin-upload-box">
+                        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                        {
+                            <img src="@Model.ImageUrl" alt="@Model.Name" />
+                        }
+                        else
+                        {
+                            <div class="admin-upload-placeholder">Ảnh</div>
+                        }
+
+                        <div>
+                            <input asp-for="PictureFile"
+                                   type="file"
+                                   accept="image/*"
+                                   class="admin-input" />
+
+                            <small>
+                                Tải ảnh danh mục. Ảnh này có thể dùng ở trang chủ hoặc trang danh mục ngoài shop.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-tab-panel" id="tab-seo">
+                <div class="admin-form-row">
+                    <label>Tiêu đề</label>
+                    <input asp-for="MetaTitle" class="admin-input" />
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Mô tả ngắn gọn</label>
+                    <textarea asp-for="MetaDescription"
+                              class="admin-input"
+                              rows="4"></textarea>
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Từ khóa</label>
+                    <input asp-for="MetaKeywords" class="admin-input" />
+                </div>
+
+                <div class="admin-form-row">
+                    <label>Alias / Đường dẫn SEO</label>
+                    <input asp-for="Alias"
+                           class="admin-input"
+                           placeholder="Ví dụ: dien-thoai, laptop..." />
+                </div>
+            </div>
+
+            <div class="admin-tab-panel" id="tab-products">
+                @if (isEdit)
+                {
+                    <div class="admin-products-box">
+                        <h3>Sản phẩm trong danh mục</h3>
+                        <p>Danh mục này hiện có <strong>@Model.ProductCount</strong> sản phẩm.</p>
+
+                        <a asp-area="Admin"
+                           asp-controller="Product"
+                           asp-action="Index"
+                           asp-route-categoryId="@Model.Id"
+                           class="admin-secondary-btn">
+                            Mở quản lý sản phẩm
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="admin-products-box">
+                        <h3>Sản phẩm trong danh mục</h3>
+                        <p>Sau khi tạo danh mục, bạn có thể gán sản phẩm vào danh mục này.</p>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</form>
+
+<script>
+    document.querySelectorAll(".admin-tab-link").forEach(button => {
+        button.addEventListener("click", function () {
+            const tabName = this.dataset.tab;
+
+            document.querySelectorAll(".admin-tab-link").forEach(x => {
+                x.classList.remove("active");
+            });
+
+            document.querySelectorAll(".admin-tab-panel").forEach(x => {
+                x.classList.remove("active");
+            });
+
+            this.classList.add("active");
+            document.querySelector("#tab-" + tabName).classList.add("active");
+        });
+    });
+</script>
