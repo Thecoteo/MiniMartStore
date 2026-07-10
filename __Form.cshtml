@@ -1,0 +1,535 @@
+﻿@model MiniSmartstoreMvc.Models.Product
+
+@{
+    bool isEdit = ViewBag.IsEdit as bool? ?? false;
+    var productOrders = ViewBag.ProductOrders as List<MiniSmartstoreMvc.Models.OrderDetail> ?? new();
+
+    string formAction = Url.Action(
+        isEdit ? "Edit" : "Create",
+        "Product",
+        new { area = "Admin", id = isEdit ? Model.Id : (int?)null }
+    ) ?? "";
+
+    bool isOutOfStock = Model.StockQuantity <= 0;
+    bool isLowStock = Model.StockQuantity > 0 && Model.StockQuantity <= Model.LowStockThreshold;
+}
+
+<form id="productForm"
+      action="@formAction"
+      method="post"
+      enctype="multipart/form-data"
+      class="apf-form">
+
+    @Html.AntiForgeryToken()
+
+    @if (isEdit)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+
+    <input type="hidden" asp-for="ImageUrl" />
+
+    <div asp-validation-summary="ModelOnly" class="apf-validation"></div>
+
+    <div class="apf-layout">
+        <aside class="apf-sidebar">
+            <button type="button" class="apf-tab active" data-tab="apf-general">
+                <span class="apf-tab-icon"><i class="bi bi-info-circle"></i></span>
+                <span>Tổng quan</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-inventory">
+                <span class="apf-tab-icon"><i class="bi bi-box-seam"></i></span>
+                <span>Kho hàng</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-price">
+                <span class="apf-tab-icon"><i class="bi bi-cash-coin"></i></span>
+                <span>Giá bán</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-picture">
+                <span class="apf-tab-icon"><i class="bi bi-image"></i></span>
+                <span>Hình ảnh</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-category">
+                <span class="apf-tab-icon"><i class="bi bi-folder2-open"></i></span>
+                <span>Danh mục</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-seo">
+                <span class="apf-tab-icon"><i class="bi bi-search"></i></span>
+                <span>SEO / Đường dẫn</span>
+            </button>
+
+            <button type="button" class="apf-tab" data-tab="apf-orders">
+                <span class="apf-tab-icon"><i class="bi bi-receipt"></i></span>
+                <span>Đơn hàng</span>
+            </button>
+        </aside>
+
+        <main class="apf-content">
+            <section id="apf-general" class="apf-panel active">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Tổng quan sản phẩm</h2>
+                        <p>Thông tin chính dùng để hiển thị sản phẩm ngoài giao diện cửa hàng.</p>
+                    </div>
+                </div>
+
+                @if (isEdit)
+                {
+                    <div class="apf-row">
+                        <label>ID</label>
+                        <div class="apf-static">@Model.Id</div>
+                    </div>
+
+                    <div class="apf-row">
+                        <label>Ngày tạo</label>
+                        <div class="apf-static">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+
+                    <div class="apf-row">
+                        <label>Cập nhật gần nhất</label>
+                        <div class="apf-static">
+                            @(Model.UpdatedAt.HasValue ? Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm") : "Chưa có")
+                        </div>
+                    </div>
+                }
+
+                <div class="apf-row">
+                    <label asp-for="IsActive">Trạng thái hiển thị</label>
+                    <div class="apf-inline">
+                        <label class="apf-switch">
+                            <input asp-for="IsActive" />
+                            <span></span>
+                        </label>
+                        <small>Bật để sản phẩm xuất hiện ngoài shop.</small>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="IsFeatured">Sản phẩm nổi bật</label>
+                    <div class="apf-inline">
+                        <label class="apf-switch">
+                            <input asp-for="IsFeatured" />
+                            <span></span>
+                        </label>
+                        <small>Dùng để ưu tiên hiển thị ở trang chủ hoặc danh sách sản phẩm.</small>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="ProductCode">Mã sản phẩm</label>
+                    <div>
+                        <input asp-for="ProductCode" class="apf-control" placeholder="Ví dụ: P-0001" />
+                        <span asp-validation-for="ProductCode" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="Name">Tên sản phẩm</label>
+                    <div>
+                        <input asp-for="Name" class="apf-control" placeholder="Ví dụ: iPhone 15" />
+                        <span asp-validation-for="Name" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="ShortDescription">Mô tả ngắn</label>
+                    <div>
+                        <input asp-for="ShortDescription" class="apf-control" placeholder="Mô tả ngắn hiển thị nhanh trên shop..." />
+                        <span asp-validation-for="ShortDescription" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row apf-row-top">
+                    <label asp-for="Description">Mô tả chi tiết</label>
+                    <div>
+                        <textarea asp-for="Description"
+                                  class="apf-control apf-textarea"
+                                  rows="7"
+                                  placeholder="Nhập mô tả chi tiết của sản phẩm..."></textarea>
+                        <span asp-validation-for="Description" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="DisplayOrder">Thứ tự hiển thị</label>
+                    <div>
+                        <input asp-for="DisplayOrder" class="apf-control" type="number" min="0" />
+                        <span asp-validation-for="DisplayOrder" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row apf-row-top">
+                    <label asp-for="AdminComment">Ghi chú quản trị</label>
+                    <div>
+                        <textarea asp-for="AdminComment"
+                                  class="apf-control apf-textarea small"
+                                  rows="4"
+                                  placeholder="Ghi chú nội bộ, không hiển thị ngoài shop..."></textarea>
+                        <span asp-validation-for="AdminComment" class="apf-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="apf-inventory" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Kho hàng</h2>
+                        <p>Quản lý tồn kho, cảnh báo sắp hết hàng và thời gian giao hàng.</p>
+                    </div>
+
+                    @if (isOutOfStock)
+                    {
+                        <span class="apf-state danger">Hết hàng</span>
+                    }
+                    else if (isLowStock)
+                    {
+                        <span class="apf-state warning">Sắp hết hàng</span>
+                    }
+                    else
+                    {
+                        <span class="apf-state success">Còn hàng</span>
+                    }
+                </div>
+
+                <div class="apf-info">
+                    Tồn kho được dùng khi khách thêm sản phẩm vào giỏ hàng. Nếu số lượng đặt vượt quá tồn kho, hệ thống giỏ hàng sẽ chặn hoặc báo lỗi.
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="StockQuantity">Số lượng tồn kho</label>
+                    <div>
+                        <input asp-for="StockQuantity" class="apf-control" type="number" min="0" />
+                        <span asp-validation-for="StockQuantity" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="LowStockThreshold">Ngưỡng cảnh báo</label>
+                    <div>
+                        <input asp-for="LowStockThreshold" class="apf-control" type="number" min="0" />
+                        <small class="apf-help">Nếu tồn kho nhỏ hơn hoặc bằng số này, báo cáo tồn kho sẽ xem là sắp hết hàng.</small>
+                        <span asp-validation-for="LowStockThreshold" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="DeliveryTime">Thời gian giao hàng</label>
+                    <div>
+                        <input asp-for="DeliveryTime" class="apf-control" placeholder="Ví dụ: 3 - 5 ngày" />
+                        <span asp-validation-for="DeliveryTime" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="AvailableStartDate">Ngày bắt đầu bán</label>
+                    <div>
+                        <input asp-for="AvailableStartDate" class="apf-control" type="datetime-local" />
+                        <span asp-validation-for="AvailableStartDate" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="AvailableEndDate">Ngày ngừng bán</label>
+                    <div>
+                        <input asp-for="AvailableEndDate" class="apf-control" type="datetime-local" />
+                        <span asp-validation-for="AvailableEndDate" class="apf-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="apf-price" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Giá bán</h2>
+                        <p>Thiết lập giá hiện tại, giá cũ và trạng thái giảm giá hiển thị ngoài shop.</p>
+                    </div>
+                </div>
+
+                <div class="apf-price-summary">
+                    <div>
+                        <span>Giá bán</span>
+                        <strong id="apfPricePreview">@Model.Price.ToString("N0") đ</strong>
+                    </div>
+
+                    <div>
+                        <span>Giá cũ</span>
+                        <strong id="apfOldPricePreview">
+                            @(Model.OldPrice.HasValue ? Model.OldPrice.Value.ToString("N0") + " đ" : "Chưa có")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Giảm giá</span>
+                        <strong id="apfDiscountPreview">0%</strong>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="Price">Giá bán</label>
+                    <div>
+                        <div class="apf-money">
+                            <input asp-for="Price" class="apf-control" type="number" min="0" step="1000" id="Price" />
+                            <span>VND</span>
+                        </div>
+                        <span asp-validation-for="Price" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="OldPrice">Giá cũ</label>
+                    <div>
+                        <div class="apf-money">
+                            <input asp-for="OldPrice" class="apf-control" type="number" min="0" step="1000" id="OldPrice" />
+                            <span>VND</span>
+                        </div>
+                        <small class="apf-help">Nếu giá cũ lớn hơn giá bán, shop có thể hiển thị nhãn giảm giá.</small>
+                        <span asp-validation-for="OldPrice" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-info">
+                    Nếu bạn đã có chức năng “Quy tắc sản phẩm”, giảm giá tự động vẫn nên xử lý ở ProductRule. Phần này chỉ là giá gốc của sản phẩm.
+                </div>
+            </section>
+
+            <section id="apf-picture" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Hình ảnh sản phẩm</h2>
+                        <p>Thiết lập ảnh chính và thêm nhiều ảnh phụ để hiển thị ở trang chi tiết sản phẩm ngoài shop.</p>
+                    </div>
+                </div>
+
+                <div class="apf-picture-layout">
+                    <div class="apf-picture-preview">
+                        <img id="previewImage"
+                             src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/products/no-image.jpg" : Model.ImageUrl)"
+                             onerror="this.src='/images/products/no-image.jpg'"
+                             alt="Ảnh chính sản phẩm" />
+                    </div>
+
+                    <div class="apf-upload-panel">
+                        <h3>Ảnh chính</h3>
+                        <p>Ảnh này hiển thị ở danh sách sản phẩm, trang chủ, giỏ hàng và ảnh lớn mặc định ở trang chi tiết.</p>
+
+                        <input type="file"
+                               name="imageFile"
+                               id="imageFile"
+                               class="apf-file"
+                               accept=".jpg,.jpeg,.png,.webp" />
+
+                        <small>
+                            Nếu không chọn ảnh mới khi sửa sản phẩm, hệ thống sẽ giữ ảnh chính hiện tại.
+                        </small>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                        {
+                            <div class="apf-current-path">
+                                <span>Ảnh chính hiện tại</span>
+                                <code>@Model.ImageUrl</code>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="apf-multi-upload">
+                    <div>
+                        <h3>Ảnh phụ / thư viện ảnh</h3>
+                        <p>Các ảnh này sẽ hiện thành danh sách ảnh nhỏ xếp dọc bên trái trong trang chi tiết sản phẩm.</p>
+                    </div>
+
+                    <input type="file"
+                           name="galleryImages"
+                           id="galleryImages"
+                           class="apf-file"
+                           accept=".jpg,.jpeg,.png,.webp"
+                           multiple />
+
+                    <small>
+                        Có thể chọn nhiều ảnh cùng lúc. Ảnh chính ở trên vẫn được giữ riêng, ảnh phụ sẽ lưu vào thư viện sản phẩm.
+                    </small>
+                </div>
+
+                @if (Model.ProductImages != null && Model.ProductImages.Any())
+                {
+                    <div class="apf-gallery">
+                        <div class="apf-gallery-head">
+                            <h3>Ảnh phụ hiện có</h3>
+                            <p>@Model.ProductImages.Count ảnh</p>
+                        </div>
+
+                        <div class="apf-gallery-grid">
+                            @foreach (var image in Model.ProductImages.OrderBy(x => x.DisplayOrder).ThenBy(x => x.Id))
+                            {
+                                <div class="apf-gallery-item">
+                                    <div class="apf-gallery-image">
+                                        <img src="@image.ImageUrl"
+                                             onerror="this.src='/images/products/no-image.jpg'"
+                                             alt="Ảnh phụ sản phẩm" />
+                                    </div>
+
+                                    <div class="apf-gallery-actions">
+                                        <button type="button"
+                                                class="apf-gallery-btn js-product-image-action"
+                                                data-url="@Url.Action("SetMainProductImage", "Product", new { area = "Admin", id = image.Id })">
+                                            Đặt làm ảnh chính
+                                        </button>
+
+                                        <button type="button"
+                                                class="apf-gallery-btn danger js-product-image-action"
+                                                data-url="@Url.Action("DeleteProductImage", "Product", new { area = "Admin", id = image.Id })"
+                                                data-confirm="Bạn có chắc muốn xóa ảnh này không?">
+                                            Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="apf-empty">
+                        Chưa có ảnh phụ. Hãy chọn nhiều ảnh ở phần “Ảnh phụ / thư viện ảnh” rồi bấm lưu.
+                    </div>
+                }
+            </section>
+
+            <section id="apf-category" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Danh mục</h2>
+                        <p>Danh mục quyết định sản phẩm hiển thị ở menu, trang danh mục và bộ lọc ngoài shop.</p>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="CategoryId">Danh mục chính</label>
+                    <div>
+                        <select asp-for="CategoryId" class="apf-control" asp-items="ViewBag.Categories">
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-info">
+                    Nếu sản phẩm không xuất hiện ngoài shop, hãy kiểm tra cả 2 điều kiện: sản phẩm đang hiển thị và danh mục của sản phẩm cũng đang hiển thị.
+                </div>
+            </section>
+
+            <section id="apf-seo" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>SEO / Đường dẫn</h2>
+                        <p>Quản lý alias và nội dung hỗ trợ công cụ tìm kiếm.</p>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="Alias">URL alias</label>
+                    <div>
+                        <input asp-for="Alias" class="apf-control" placeholder="Ví dụ: iphone-15" />
+                        <small class="apf-help">Nếu bỏ trống, hệ thống sẽ tự tạo từ tên sản phẩm.</small>
+                        <span asp-validation-for="Alias" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="SeoTitle">Tiêu đề SEO</label>
+                    <div>
+                        <input asp-for="SeoTitle" class="apf-control" placeholder="Tiêu đề hiển thị trên công cụ tìm kiếm..." />
+                        <span asp-validation-for="SeoTitle" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row apf-row-top">
+                    <label asp-for="SeoDescription">Mô tả SEO</label>
+                    <div>
+                        <textarea asp-for="SeoDescription"
+                                  class="apf-control apf-textarea small"
+                                  rows="4"
+                                  placeholder="Mô tả ngắn cho công cụ tìm kiếm..."></textarea>
+                        <span asp-validation-for="SeoDescription" class="apf-error"></span>
+                    </div>
+                </div>
+
+                <div class="apf-row">
+                    <label asp-for="SeoKeywords">Từ khóa SEO</label>
+                    <div>
+                        <input asp-for="SeoKeywords" class="apf-control" placeholder="Ví dụ: iphone, điện thoại, smartphone" />
+                        <span asp-validation-for="SeoKeywords" class="apf-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section id="apf-orders" class="apf-panel">
+                <div class="apf-section-head">
+                    <div>
+                        <h2>Đơn hàng liên quan</h2>
+                        <p>Xem nhanh các đơn hàng có chứa sản phẩm này.</p>
+                    </div>
+                </div>
+
+                @if (!isEdit)
+                {
+                    <div class="apf-info">
+                        Sau khi tạo sản phẩm, tab đơn hàng sẽ hiển thị các đơn có chứa sản phẩm này.
+                    </div>
+                }
+                else if (!productOrders.Any())
+                {
+                    <div class="apf-empty">
+                        Chưa có đơn hàng nào chứa sản phẩm này.
+                    </div>
+                }
+                else
+                {
+                    <div class="apf-table-wrap">
+                        <table class="apf-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Số lượng</th>
+                                    <th>Giá tại thời điểm mua</th>
+                                    <th>Tổng</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in productOrders)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>#@item.OrderId</strong>
+                                            <div class="apf-muted">@item.Order?.OrderCode</div>
+                                        </td>
+                                        <td>@(item.Order != null ? item.Order.CreatedAt.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.UnitPrice.ToString("N0") đ</td>
+                                        <td>@item.TotalPrice.ToString("N0") đ</td>
+                                        <td class="text-end">
+                                            <a asp-area="Admin"
+                                               asp-controller="Order"
+                                               asp-action="Details"
+                                               asp-route-id="@item.OrderId"
+                                               class="apf-link-btn">
+                                                Xem đơn
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        </main>
+    </div>
+</form>

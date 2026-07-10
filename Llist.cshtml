@@ -1,0 +1,337 @@
+﻿@model List<MiniSmartstoreMvc.ViewModels.AdminCategoryListItemViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+
+    var search = ViewBag.Search as string;
+
+    var currentPage = ViewBag.Page is int p ? p : 1;
+    var currentPageSize = ViewBag.PageSize is int ps ? ps : 25;
+    var totalItems = ViewBag.TotalItems is int ti ? ti : Model.Count;
+    var totalPages = ViewBag.TotalPages is int tp && tp > 0 ? tp : 1;
+
+    var previousPage = currentPage > 1 ? currentPage - 1 : 1;
+    var nextPage = currentPage < totalPages ? currentPage + 1 : totalPages;
+}
+
+<div class="admin-category-page">
+    <div class="admin-category-card">
+
+        <div class="admin-category-header">
+            <div class="admin-category-title-group">
+                <div>
+                    <h1>Quản lý danh mục</h1>
+                    <p>Thêm, chỉnh sửa, ẩn/hiện và sắp xếp danh mục hiển thị ngoài cửa hàng.</p>
+                </div>
+
+                <div class="admin-category-view-switch">
+                    <a asp-area="Admin"
+                       asp-controller="Category"
+                       asp-action="List"
+                       class="admin-view-btn active"
+                       title="Xem dạng danh sách">
+                        <span class="admin-css-icon admin-icon-list"></span>
+                    </a>
+
+                    <a asp-area="Admin"
+                       asp-controller="Category"
+                       asp-action="Tree"
+                       class="admin-view-btn"
+                       title="Xem dạng cây danh mục">
+                        <span class="admin-css-icon admin-icon-tree"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="admin-alert admin-alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="admin-alert admin-alert-danger">
+                @TempData["Error"]
+            </div>
+        }
+
+        <div class="admin-category-toolbar smartstore-style">
+            <button type="button"
+                    class="admin-filter-btn"
+                    id="categoryFilterToggle"
+                    title="Bộ lọc">
+                <span class="admin-css-icon admin-icon-filter"></span>
+            </button>
+
+            <a asp-area="Admin"
+               asp-controller="Category"
+               asp-action="Create"
+               class="admin-add-inline-btn">
+                <span>+</span>
+                <span>Thêm mới...</span>
+            </a>
+        </div>
+
+        <div class="admin-filter-panel" id="categoryFilterPanel">
+            <form asp-area="Admin"
+                  asp-controller="Category"
+                  asp-action="List"
+                  method="get">
+
+                <div class="admin-filter-panel-title">
+                    Tìm kiếm danh mục
+                </div>
+
+                <label>Tên danh mục hoặc alias</label>
+
+                <input type="text"
+                       name="search"
+                       value="@search"
+                       placeholder="Nhập từ khóa..." />
+
+                <input type="hidden" name="pageSize" value="@currentPageSize" />
+
+                <div class="admin-filter-actions">
+                    <button type="submit">
+                        Tìm kiếm
+                    </button>
+
+                    <a asp-area="Admin"
+                       asp-controller="Category"
+                       asp-action="List">
+                        Xóa lọc
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-category-table-wrap">
+            <table class="admin-category-table">
+                <thead>
+                    <tr>
+                        <th>Tên danh mục</th>
+                        <th>Đường dẫn đầy đủ</th>
+                        <th>Alias</th>
+                        <th>Sản phẩm</th>
+                        <th>Trạng thái</th>
+                        <th>Thứ tự</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="admin-cat-name-cell" style="--level:@item.Level">
+                                        <a asp-area="Admin"
+                                           asp-controller="Category"
+                                           asp-action="Edit"
+                                           asp-route-id="@item.Id"
+                                           class="admin-cat-name">
+                                            @item.Name
+                                        </a>
+
+                                        @if (!item.IncludeInMenu)
+                                        {
+                                            <span class="admin-small-tag muted">
+                                                Ẩn menu
+                                            </span>
+                                        }
+
+                                        @if (item.ShowOnHomePage)
+                                        {
+                                            <span class="admin-small-tag">
+                                                Trang chủ
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="admin-cat-path">
+                                        @item.FullName
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="admin-cat-alias">
+                                        @(string.IsNullOrWhiteSpace(item.Alias) ? "Chưa có" : item.Alias)
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="admin-count-badge">
+                                        @item.ProductCount
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <form asp-area="Admin"
+                                          asp-controller="Category"
+                                          asp-action="TogglePublished"
+                                          asp-route-id="@item.Id"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+
+                                        <button type="submit"
+                                                class="admin-status-pill @(item.IsActive ? "is-on" : "is-off")">
+                                            @(item.IsActive ? "Đang hiển thị" : "Đang ẩn")
+                                        </button>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <span class="admin-order-number">
+                                        @item.DisplayOrder
+                                    </span>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="admin-row-actions">
+                                        <a asp-area="Admin"
+                                           asp-controller="Category"
+                                           asp-action="Edit"
+                                           asp-route-id="@item.Id"
+                                           class="admin-icon-btn">
+                                            Sửa
+                                        </a>
+
+                                        <form asp-area="Admin"
+                                              asp-controller="Category"
+                                              asp-action="Delete"
+                                              asp-route-id="@item.Id"
+                                              method="post"
+                                              onsubmit="return confirm('Bạn có chắc muốn xóa danh mục này không? Nếu danh mục đang có sản phẩm hoặc danh mục con thì hệ thống sẽ không cho xóa.');">
+                                            @Html.AntiForgeryToken()
+
+                                            <button type="submit" class="admin-icon-btn danger">
+                                                Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="admin-empty-row">
+                                Không tìm thấy danh mục nào.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-category-grid-footer">
+            <div class="admin-grid-left">
+                <a asp-area="Admin"
+                   asp-controller="Category"
+                   asp-action="List"
+                   asp-route-search="@search"
+                   asp-route-page="@currentPage"
+                   asp-route-pageSize="@currentPageSize"
+                   class="admin-grid-icon-btn"
+                   title="Làm mới">
+                    <span class="admin-css-icon admin-icon-refresh"></span>
+                </a>
+
+                <a asp-area="Admin"
+                   asp-controller="Category"
+                   asp-action="List"
+                   asp-route-search="@search"
+                   asp-route-page="1"
+                   asp-route-pageSize="@currentPageSize"
+                   class="admin-grid-icon-btn @(currentPage <= 1 ? "disabled" : "")">
+                    «
+                </a>
+
+                <a asp-area="Admin"
+                   asp-controller="Category"
+                   asp-action="List"
+                   asp-route-search="@search"
+                   asp-route-page="@previousPage"
+                   asp-route-pageSize="@currentPageSize"
+                   class="admin-grid-icon-btn @(currentPage <= 1 ? "disabled" : "")">
+                    ‹
+                </a>
+
+                <span class="admin-grid-page-number">
+                    @currentPage
+                </span>
+
+                <a asp-area="Admin"
+                   asp-controller="Category"
+                   asp-action="List"
+                   asp-route-search="@search"
+                   asp-route-page="@nextPage"
+                   asp-route-pageSize="@currentPageSize"
+                   class="admin-grid-icon-btn @(currentPage >= totalPages ? "disabled" : "")">
+                    ›
+                </a>
+
+                <a asp-area="Admin"
+                   asp-controller="Category"
+                   asp-action="List"
+                   asp-route-search="@search"
+                   asp-route-page="@totalPages"
+                   asp-route-pageSize="@currentPageSize"
+                   class="admin-grid-icon-btn @(currentPage >= totalPages ? "disabled" : "")">
+                    »
+                </a>
+            </div>
+
+            <div class="admin-grid-right">
+                <span>
+                    Hiển thị @Model.Count / @totalItems danh mục
+                </span>
+
+                <form asp-area="Admin"
+                      asp-controller="Category"
+                      asp-action="List"
+                      method="get"
+                      class="admin-page-size-form">
+
+                    <input type="hidden" name="search" value="@search" />
+                    <input type="hidden" name="page" value="1" />
+
+                    <select name="pageSize" onchange="this.form.submit()">
+                        <option value="10" selected="@(currentPageSize == 10)">10 dòng / trang</option>
+                        <option value="25" selected="@(currentPageSize == 25)">25 dòng / trang</option>
+                        <option value="50" selected="@(currentPageSize == 50)">50 dòng / trang</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggle = document.getElementById("categoryFilterToggle");
+            const panel = document.getElementById("categoryFilterPanel");
+
+            if (!toggle || !panel) return;
+
+            toggle.addEventListener("click", function () {
+                panel.classList.toggle("is-open");
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!panel.contains(event.target) && !toggle.contains(event.target)) {
+                    panel.classList.remove("is-open");
+                }
+            });
+        });
+    </script>
+}
