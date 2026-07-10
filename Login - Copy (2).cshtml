@@ -1,0 +1,198 @@
+﻿@page
+@model MiniSmartstoreMvc.Areas.Identity.Pages.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Đăng nhập - MiniSmartstore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/auth-double.css" asp-append-version="true" />
+</head>
+
+<body class="auth-double-body">
+    <div class="auth-back-home">
+        <a asp-area="" asp-controller="Home" asp-action="Index">
+            ← Quay lại trang chủ
+        </a>
+    </div>
+
+    <div class="auth-double-container" id="authContainer">
+        <!-- ĐĂNG KÝ -->
+        <div class="auth-form-container auth-sign-up-container">
+            <form asp-area="Identity"
+                  asp-page="/Account/Register"
+                  asp-route-returnUrl="@Model.ReturnUrl"
+                  method="post"
+                  class="auth-form">
+
+                @Html.AntiForgeryToken()
+
+                <h1>Tạo tài khoản</h1>
+                <p class="auth-subtitle">Đăng ký để mua sắm và theo dõi đơn hàng.</p>
+
+                <div class="auth-input-group">
+                    <span class="auth-field-icon auth-icon-user"></span>
+                    <input name="Input.FullName"
+                           type="text"
+                           placeholder="Họ tên của bạn"
+                           autocomplete="name" />
+                </div>
+
+                <div class="auth-input-group">
+                    <span class="auth-field-icon auth-icon-email"></span>
+                    <input name="Input.Email"
+                           type="email"
+                           placeholder="Email"
+                           autocomplete="username"
+                           required />
+                </div>
+
+                <div class="auth-input-group">
+                    <span class="auth-field-icon auth-icon-lock"></span>
+                    <input name="Input.Password"
+                           type="password"
+                           placeholder="Mật khẩu"
+                           autocomplete="new-password"
+                           required />
+                </div>
+
+                <div class="auth-input-group">
+                    <span class="auth-field-icon auth-icon-check"></span>
+                    <input name="Input.ConfirmPassword"
+                           type="password"
+                           placeholder="Nhập lại mật khẩu"
+                           autocomplete="new-password"
+                           required />
+                </div>
+
+                <button type="submit" class="auth-main-btn">
+                    Đăng ký
+                </button>
+
+                <div class="auth-mobile-switch">
+                    Đã có tài khoản?
+                    <button type="button" id="mobileSignIn">
+                        Đăng nhập
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ĐĂNG NHẬP -->
+        <div class="auth-form-container auth-sign-in-container">
+            <form id="account"
+                  method="post"
+                  class="auth-form">
+
+                @Html.AntiForgeryToken()
+
+                <h1>Đăng nhập</h1>
+                <p class="auth-subtitle">Sử dụng tài khoản của bạn để tiếp tục.</p>
+
+                <div asp-validation-summary="ModelOnly" class="text-danger auth-validation"></div>
+
+                <label>Email</label>
+                <div class="auth-input-group">
+                    <span>✉️</span>
+                    <input asp-for="Input.Email"
+                           placeholder="Nhập email của bạn"
+                           autocomplete="username"
+                           aria-required="true" />
+                </div>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+
+                <label>Mật khẩu</label>
+                <div class="auth-input-group">
+                    <span>🔒</span>
+                    <input asp-for="Input.Password"
+                           placeholder="Nhập mật khẩu"
+                           autocomplete="current-password"
+                           aria-required="true" />
+                </div>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+
+                <div class="auth-form-options">
+                    <label class="auth-remember">
+                        <input asp-for="Input.RememberMe" />
+                        <span>Ghi nhớ đăng nhập</span>
+                    </label>
+
+                    <a asp-page="./ForgotPassword">
+                        Quên mật khẩu?
+                    </a>
+                </div>
+
+                <button type="submit" class="auth-main-btn">
+                    Đăng nhập
+                </button>
+
+                <div class="auth-admin-note">
+                    <strong>Tài khoản admin mặc định:</strong>
+                    <span>admin@mini.com / Admin@123456</span>
+                </div>
+
+                <div class="auth-mobile-switch">
+                    Chưa có tài khoản?
+                    <button type="button" id="mobileSignUp">
+                        Đăng ký ngay
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- OVERLAY -->
+        <div class="auth-overlay-container">
+            <div class="auth-overlay">
+                <div class="auth-overlay-panel auth-overlay-left">
+                    <div class="auth-logo-box">
+                        <span>M</span>
+                        <strong>MiniSmartstore</strong>
+                    </div>
+
+                    <h1>Chào mừng trở lại!</h1>
+                    <p>
+                        Nếu bạn đã có tài khoản, hãy đăng nhập để tiếp tục mua sắm,
+                        quản lý giỏ hàng và theo dõi đơn hàng.
+                    </p>
+
+                    <button type="button" class="auth-ghost-btn" id="signIn">
+                        Đăng nhập
+                    </button>
+                </div>
+
+                <div class="auth-overlay-panel auth-overlay-right">
+                    <div class="auth-logo-box">
+                        <span>M</span>
+                        <strong>MiniSmartstore</strong>
+                    </div>
+
+                    <h1>Xin chào!</h1>
+                    <p>
+                        Tạo tài khoản mới để lưu địa chỉ nhận hàng, danh sách yêu thích
+                        và trải nghiệm mua sắm tốt hơn.
+                    </p>
+
+                    <button type="button" class="auth-ghost-btn" id="signUp">
+                        Đăng ký
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/auth-double.js" asp-append-version="true"></script>
+</body>
+</html>
