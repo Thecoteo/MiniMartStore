@@ -1,0 +1,272 @@
+﻿@model IEnumerable<MiniSmartstoreMvc.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var totalAmount = Model.Sum(x => x.TotalPrice);
+}
+
+<div class="container cart-page mt-4">
+    <div class="page-heading mb-4">
+        <h1>Giỏ hàng của bạn</h1>
+        <p>Kiểm tra số lượng sản phẩm trước khi thanh toán</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="cart-card">
+                    <div class="cart-header">
+                        <h5>Sản phẩm trong giỏ</h5>
+                    </div>
+
+                    @foreach (var item in Model)
+                    {
+                        <div class="cart-item"
+                             data-price="@item.UnitPrice"
+                             data-product-id="@item.ProductId">
+                            <div class="cart-product-image">
+                                <img src="@item.Product?.ImageUrl"
+                                     alt="@item.Product?.Name"
+                                     onerror="this.src='/images/products/no-image.jpg'" />
+                            </div>
+
+                            <div class="cart-product-info">
+                                <h5>@item.Product?.Name</h5>
+                                <p>@item.Product?.Category?.Name</p>
+
+                                <div class="cart-price">
+                                    @item.UnitPrice.ToString("N0") đ
+                                </div>
+
+                                <small class="text-muted">
+                                    Còn lại: @item.StockQuantity sản phẩm
+                                </small>
+                            </div>
+
+                            <div class="cart-quantity">
+                                <form asp-controller="Cart"
+                                      asp-action="UpdateQuantity"
+                                      method="post"
+                                      class="quantity-form">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="productId" value="@item.ProductId" />
+
+                                    <div class="input-group">
+                                        <button type="button"
+                                                class="btn btn-outline-secondary quantity-minus">
+                                            -
+                                        </button>
+
+                                        <input type="number"
+                                               name="quantity"
+                                               value="@item.Quantity"
+                                               min="1"
+                                               max="@item.StockQuantity"
+                                               class="form-control text-center quantity-input"
+                                               data-price="@item.UnitPrice"
+                                               data-stock="@item.StockQuantity" />
+
+                                        <button type="button"
+                                                class="btn btn-outline-secondary quantity-plus">
+                                            +
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="cart-total">
+                                <strong class="line-total">
+                                    @item.TotalPrice.ToString("N0") đ
+                                </strong>
+
+                                <form asp-controller="Cart"
+                                      asp-action="Remove"
+                                      method="post"
+                                      class="mt-2"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                                    @Html.AntiForgeryToken()
+
+                                    <input type="hidden" name="productId" value="@item.ProductId" />
+
+                                    <button type="submit" class="remove-link border-0 bg-transparent p-0">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="cart-actions mt-3">
+                    <a asp-controller="Product" asp-action="Index" class="btn btn-outline-primary">
+                        Tiếp tục mua sắm
+                    </a>
+
+                    <form asp-controller="Cart"
+                          asp-action="Clear"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')">
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit" class="btn btn-outline-danger">
+                            Xóa toàn bộ giỏ hàng
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="order-summary">
+                    <h4>Tóm tắt đơn hàng</h4>
+
+                    <div class="summary-row">
+                        <span>Tạm tính</span>
+                        <strong id="cartSubTotal">@totalAmount.ToString("N0") đ</strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Phí vận chuyển</span>
+                        <strong>Chưa tính</strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Giảm giá</span>
+                        <strong>0 đ</strong>
+                    </div>
+
+                    <hr />
+
+                    <div class="summary-total">
+                        <span>Tổng cộng</span>
+                        <strong id="cartGrandTotal">@totalAmount.ToString("N0") đ</strong>
+                    </div>
+
+                    <a asp-controller="Checkout"
+                       asp-action="BillingAddress"
+                       class="btn btn-primary w-100">
+                        Tiến hành thanh toán
+                    </a>
+
+                    <div class="payment-note mt-3">
+                        <p>Ghi chú:</p>
+                        <ul>
+                            <li>Số lượng không được vượt quá tồn kho.</li>
+                            <li>Giỏ hàng sẽ tự cập nhật khi đổi số lượng.</li>
+                            <li>Chưa đăng nhập vẫn có thể thêm sản phẩm vào giỏ.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-box">
+            <h4>Giỏ hàng của bạn đang trống</h4>
+            <p>Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
+
+            <a asp-controller="Product" asp-action="Index" class="btn btn-primary">
+                Mua sắm ngay
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function formatCurrency(value) {
+            return new Intl.NumberFormat("vi-VN").format(value) + " đ";
+        }
+
+        function recalculateCart() {
+            let grandTotal = 0;
+
+            document.querySelectorAll(".cart-item").forEach(function (item) {
+                const input = item.querySelector(".quantity-input");
+                const lineTotalElement = item.querySelector(".line-total");
+
+                if (!input || !lineTotalElement) return;
+
+                const price = parseFloat(input.dataset.price) || 0;
+                const quantity = parseInt(input.value) || 1;
+
+                const lineTotal = price * quantity;
+                grandTotal += lineTotal;
+
+                lineTotalElement.textContent = formatCurrency(lineTotal);
+            });
+
+            const subTotal = document.getElementById("cartSubTotal");
+            const grandTotalElement = document.getElementById("cartGrandTotal");
+
+            if (subTotal) {
+                subTotal.textContent = formatCurrency(grandTotal);
+            }
+
+            if (grandTotalElement) {
+                grandTotalElement.textContent = formatCurrency(grandTotal);
+            }
+        }
+
+        document.querySelectorAll(".quantity-form").forEach(function (form) {
+            const input = form.querySelector(".quantity-input");
+            const minusButton = form.querySelector(".quantity-minus");
+            const plusButton = form.querySelector(".quantity-plus");
+
+            if (!input || !minusButton || !plusButton) return;
+
+            let submitTimer;
+
+            function submitWithDelay() {
+                clearTimeout(submitTimer);
+
+                submitTimer = setTimeout(function () {
+                    form.requestSubmit();
+                }, 500);
+            }
+
+            minusButton.addEventListener("click", function () {
+                let value = parseInt(input.value) || 1;
+
+                if (value > 1) {
+                    input.value = value - 1;
+                    recalculateCart();
+                    form.requestSubmit();
+                }
+            });
+
+            plusButton.addEventListener("click", function () {
+                let value = parseInt(input.value) || 1;
+                let stock = parseInt(input.dataset.stock) || 1;
+
+                if (value < stock) {
+                    input.value = value + 1;
+                    recalculateCart();
+                    form.requestSubmit();
+                } else {
+                    alert("Số lượng đã đạt tối đa tồn kho.");
+                }
+            });
+
+            input.addEventListener("input", function () {
+                let value = parseInt(input.value) || 1;
+                let stock = parseInt(input.dataset.stock) || 1;
+
+                if (value < 1) {
+                    input.value = 1;
+                }
+
+                if (value > stock) {
+                    input.value = stock;
+                    alert("Số lượng không được vượt quá tồn kho.");
+                }
+
+                recalculateCart();
+                submitWithDelay();
+            });
+        });
+    </script>
+}
