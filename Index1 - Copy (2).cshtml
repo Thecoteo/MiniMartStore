@@ -1,0 +1,551 @@
+﻿@model IEnumerable<MiniSmartstoreMvc.Models.Product>
+@using MiniSmartstoreMvc.Models
+
+@{
+    ViewData["Title"] = "Sản phẩm";
+
+    var products = Model?.ToList() ?? new List<Product>();
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var categoryCounts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+
+    int? currentCategoryId = ViewBag.CategoryId;
+    string search = ViewBag.Search as string ?? "";
+    string sortOrder = ViewBag.SortOrder as string ?? "featured";
+    string viewMode = ViewBag.ViewMode as string ?? "grid";
+    string priceRange = ViewBag.PriceRange as string ?? "";
+    string stockStatus = ViewBag.StockStatus as string ?? "";
+
+    decimal? minPrice = ViewBag.MinPrice;
+    decimal? maxPrice = ViewBag.MaxPrice;
+
+    var selectedCategory = categories.FirstOrDefault(c => c.Id == currentCategoryId);
+    var pageTitle = selectedCategory?.Name ?? "Tất cả sản phẩm";
+}
+
+<div class="container smart-category-page">
+    <div class="smart-category-breadcrumb">
+        <a asp-controller="Home" asp-action="Index">🏠</a>
+        <span>/</span>
+        <span>@pageTitle</span>
+    </div>
+
+    <div class="smart-category-shop-frame">
+        <aside class="smart-filter-sidebar">
+            <div class="smart-filter-card">
+                <div class="smart-filter-title">
+                    Danh mục sản phẩm
+                </div>
+
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-viewMode="@viewMode"
+                   asp-route-sortOrder="@sortOrder"
+                   class="smart-category-filter-item @(currentCategoryId == null ? "active" : "")">
+                    <span>Tất cả sản phẩm</span>
+                    <strong>@categoryCounts.Values.Sum()</strong>
+                </a>
+
+                @foreach (var category in categories)
+                {
+                    var count = categoryCounts.ContainsKey(category.Id)
+                        ? categoryCounts[category.Id]
+                        : 0;
+
+                    <a asp-controller="Product"
+                       asp-action="Index"
+                       asp-route-categoryId="@category.Id"
+                       asp-route-viewMode="@viewMode"
+                       asp-route-sortOrder="@sortOrder"
+                       class="smart-category-filter-item @(currentCategoryId == category.Id ? "active" : "")">
+                        <span>@category.Name</span>
+                        <strong>@count</strong>
+                    </a>
+                }
+            </div>
+
+            <form asp-controller="Product"
+                  asp-action="Index"
+                  method="get"
+                  class="smart-filter-card smart-filter-form">
+
+                <input type="hidden" name="categoryId" value="@currentCategoryId" />
+                <input type="hidden" name="viewMode" value="@viewMode" />
+                <input type="hidden" name="sortOrder" value="@sortOrder" />
+
+                <div class="smart-filter-section">
+                    <button type="button" class="smart-filter-collapse">
+                        Tìm kiếm
+                    </button>
+
+                    <input type="text"
+                           name="search"
+                           value="@search"
+                           class="form-control"
+                           placeholder="Tìm sản phẩm..." />
+                </div>
+
+                <div class="smart-filter-section">
+                    <button type="button" class="smart-filter-collapse">
+                        Giá
+                    </button>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="priceRange" value="under_1m" @(priceRange == "under_1m" ? "checked" : "") />
+                        <span>Dưới 1.000.000 đ</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="priceRange" value="1m_5m" @(priceRange == "1m_5m" ? "checked" : "") />
+                        <span>1.000.000 đ - 5.000.000 đ</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="priceRange" value="5m_10m" @(priceRange == "5m_10m" ? "checked" : "") />
+                        <span>5.000.000 đ - 10.000.000 đ</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="priceRange" value="10m_20m" @(priceRange == "10m_20m" ? "checked" : "") />
+                        <span>10.000.000 đ - 20.000.000 đ</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="priceRange" value="over_20m" @(priceRange == "over_20m" ? "checked" : "") />
+                        <span>Trên 20.000.000 đ</span>
+                    </label>
+
+                    <div class="smart-price-custom">
+                        <input type="number"
+                               name="minPrice"
+                               value="@minPrice"
+                               class="form-control"
+                               placeholder="Từ" />
+
+                        <span>-</span>
+
+                        <input type="number"
+                               name="maxPrice"
+                               value="@maxPrice"
+                               class="form-control"
+                               placeholder="Đến" />
+                    </div>
+                </div>
+
+                <div class="smart-filter-section">
+                    <button type="button" class="smart-filter-collapse">
+                        Tình trạng
+                    </button>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="stockStatus" value="" @(string.IsNullOrWhiteSpace(stockStatus) ? "checked" : "") />
+                        <span>Tất cả</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="stockStatus" value="in_stock" @(stockStatus == "in_stock" ? "checked" : "") />
+                        <span>Còn hàng</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" name="stockStatus" value="out_stock" @(stockStatus == "out_stock" ? "checked" : "") />
+                        <span>Hết hàng</span>
+                    </label>
+                </div>
+
+                <div class="smart-filter-section">
+                    <button type="button" class="smart-filter-collapse">
+                        Đánh giá
+                    </button>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" disabled />
+                        <span>⭐⭐⭐⭐⭐ trở lên</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" disabled />
+                        <span>⭐⭐⭐⭐ trở lên</span>
+                    </label>
+
+                    <small class="text-muted">
+                        Phần đánh giá đang là giao diện mẫu, chưa lọc dữ liệu thật.
+                    </small>
+                </div>
+
+                <div class="smart-filter-section">
+                    <button type="button" class="smart-filter-collapse">
+                        Thời gian giao hàng
+                    </button>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" disabled />
+                        <span>1 - 2 ngày</span>
+                    </label>
+
+                    <label class="smart-filter-radio">
+                        <input type="radio" disabled />
+                        <span>3 - 5 ngày</span>
+                    </label>
+                </div>
+
+                <div class="smart-filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Lọc sản phẩm
+                    </button>
+
+                    <a asp-controller="Product"
+                       asp-action="Index"
+                       asp-route-categoryId="@currentCategoryId"
+                       asp-route-viewMode="@viewMode"
+                       class="btn btn-outline-secondary">
+                        Xóa lọc
+                    </a>
+                </div>
+            </form>
+        </aside>
+
+        <main class="smart-product-result-panel">
+            <div class="smart-product-list-header">
+                <div>
+                    <h1>@pageTitle</h1>
+                    <p>
+                        Hiển thị @products.Count sản phẩm
+                    </p>
+                </div>
+
+                <div class="smart-product-toolbar">
+                    <form asp-controller="Product"
+                          asp-action="Index"
+                          method="get"
+                          class="smart-sort-form">
+
+                        <input type="hidden" name="categoryId" value="@currentCategoryId" />
+                        <input type="hidden" name="search" value="@search" />
+                        <input type="hidden" name="minPrice" value="@minPrice" />
+                        <input type="hidden" name="maxPrice" value="@maxPrice" />
+                        <input type="hidden" name="priceRange" value="@priceRange" />
+                        <input type="hidden" name="stockStatus" value="@stockStatus" />
+                        <input type="hidden" name="viewMode" value="@viewMode" />
+
+                        <select name="sortOrder"
+                                class="form-select"
+                                onchange="this.form.submit()">
+                            <option value="featured" selected="@(sortOrder == "featured")">Sắp xếp theo nổi bật</option>
+                            <option value="price_asc" selected="@(sortOrder == "price_asc")">Giá tăng dần</option>
+                            <option value="price_desc" selected="@(sortOrder == "price_desc")">Giá giảm dần</option>
+                            <option value="newest" selected="@(sortOrder == "newest")">Mới nhất</option>
+                            <option value="name_asc" selected="@(sortOrder == "name_asc")">Tên A - Z</option>
+                            <option value="name_desc" selected="@(sortOrder == "name_desc")">Tên Z - A</option>
+                        </select>
+                    </form>
+
+                    <div class="smart-view-switch">
+                        <a asp-controller="Product"
+                           asp-action="Index"
+                           asp-route-categoryId="@currentCategoryId"
+                           asp-route-search="@search"
+                           asp-route-minPrice="@minPrice"
+                           asp-route-maxPrice="@maxPrice"
+                           asp-route-priceRange="@priceRange"
+                           asp-route-stockStatus="@stockStatus"
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-viewMode="grid"
+                           class="@(viewMode == "grid" ? "active" : "")">
+                            ▦
+                        </a>
+
+                        <a asp-controller="Product"
+                           asp-action="Index"
+                           asp-route-categoryId="@currentCategoryId"
+                           asp-route-search="@search"
+                           asp-route-minPrice="@minPrice"
+                           asp-route-maxPrice="@maxPrice"
+                           asp-route-priceRange="@priceRange"
+                           asp-route-stockStatus="@stockStatus"
+                           asp-route-sortOrder="@sortOrder"
+                           asp-route-viewMode="list"
+                           class="@(viewMode == "list" ? "active" : "")">
+                            ☰
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @if (products.Any())
+            {
+                if (viewMode == "list")
+                {
+                    <div class="smart-product-list-view">
+                        @foreach (var item in products)
+                        {
+                            var discount = GetDiscountPercent(item);
+
+                            var description = string.IsNullOrWhiteSpace(item.Description)
+                                ? "Chưa có mô tả sản phẩm."
+                                : item.Description;
+
+                            var shortDescription = description.Length > 140
+                                ? description.Substring(0, 140) + "..."
+                                : description;
+
+                            <article class="smart-product-list-row smart-hover-product-card">
+                                <div class="smart-list-product-image">
+                                    @if (discount > 0)
+                                    {
+                                        <span class="smart-discount-badge">-@discount%</span>
+                                    }
+
+                                    <a asp-controller="Product"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id">
+                                        <img src="@item.ImageUrl"
+                                             alt="@item.Name"
+                                             onerror="this.src='/images/products/no-image.jpg'" />
+                                    </a>
+                                </div>
+
+                                <div class="smart-list-product-info">
+                                    <div class="smart-product-category">
+                                        @item.Category?.Name
+                                    </div>
+
+                                    <a asp-controller="Product"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id"
+                                       class="smart-list-product-name">
+                                        @item.Name
+                                    </a>
+
+                                    <p>
+                                        @shortDescription
+                                    </p>
+
+                                    @if (item.ProductColors != null && item.ProductColors.Any())
+                                    {
+                                        <div class="smart-color-swatches">
+                                            @foreach (var color in item.ProductColors.Take(8))
+                                            {
+                                                <span title="@color.ColorName"
+                                                      style="background:@color.ColorCode"></span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="smart-delivery-line">
+                                        Giao hàng @(string.IsNullOrWhiteSpace(item.DeliveryTime) ? "3 - 5 ngày" : item.DeliveryTime)
+                                    </div>
+                                </div>
+
+                                <div class="smart-list-product-buy">
+                                    <div class="smart-list-price">
+                                        <strong>@item.Price.ToString("N0") đ</strong>
+
+                                        @if (item.OldPrice != null && item.OldPrice > item.Price)
+                                        {
+                                            <small>Giá cũ: @item.OldPrice.Value.ToString("N0") đ</small>
+                                        }
+                                    </div>
+
+                                    @if (item.StockQuantity > 0)
+                                    {
+                                        <button type="button"
+                                                class="smart-add-cart-btn js-drawer-add-cart"
+                                                data-product-id="@item.Id">
+                                            🛒 Thêm vào giỏ
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="smart-out-stock-btn" disabled>
+                                            Hết hàng
+                                        </button>
+                                    }
+
+                                    <div class="smart-list-icons">
+                                        <button type="button"
+                                                class="smart-list-icon-btn js-add-wishlist"
+                                                data-product-id="@item.Id"
+                                                title="Thêm vào yêu thích">
+                                            ♡
+                                        </button>
+
+                                        <button type="button"
+                                                class="smart-list-icon-btn js-add-compare"
+                                                data-product-id="@item.Id"
+                                                title="Thêm vào so sánh">
+                                            ⇄
+                                        </button>
+
+                                        <a asp-controller="Product"
+                                           asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           class="smart-list-icon-btn"
+                                           title="Xem chi tiết">
+                                            ℹ
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="smart-product-grid-view">
+                        @foreach (var item in products)
+                        {
+                            var discount = GetDiscountPercent(item);
+
+                            var description = string.IsNullOrWhiteSpace(item.Description)
+                                ? "Chưa có mô tả sản phẩm."
+                                : item.Description;
+
+                            var shortDescription = description.Length > 120
+                                ? description.Substring(0, 120) + "..."
+                                : description;
+
+                            <article class="smart-category-product-card smart-hover-product-card">
+                                <div class="smart-grid-product-image">
+                                    @if (discount > 0)
+                                    {
+                                        <span class="smart-discount-badge">-@discount%</span>
+                                    }
+
+                                    @if (item.IsFeatured)
+                                    {
+                                        <span class="smart-featured-badge">Nổi bật</span>
+                                    }
+
+                                    <a asp-controller="Product"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id">
+                                        <img src="@item.ImageUrl"
+                                             alt="@item.Name"
+                                             onerror="this.src='/images/products/no-image.jpg'" />
+                                    </a>
+                                </div>
+
+                                <div class="smart-grid-basic-body">
+                                    <div class="smart-product-category">
+                                        @item.Category?.Name
+                                    </div>
+
+                                    <a asp-controller="Product"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id"
+                                       class="smart-grid-product-name">
+                                        @item.Name
+                                    </a>
+
+                                    <div class="smart-grid-price">
+                                        <strong>@item.Price.ToString("N0") đ</strong>
+
+                                        @if (item.OldPrice != null && item.OldPrice > item.Price)
+                                        {
+                                            <small>Giá cũ: @item.OldPrice.Value.ToString("N0") đ</small>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="smart-product-hover-preview">
+                                    <p>
+                                        @shortDescription
+                                    </p>
+
+                                    <div class="smart-delivery-line">
+                                        🟠 Giao hàng 3 - 5 ngày
+                                    </div>
+
+                                    @if (item.ProductColors != null && item.ProductColors.Any())
+                                    {
+                                        <div class="smart-color-swatches">
+                                            @foreach (var color in item.ProductColors.Take(8))
+                                            {
+                                                <span title="@color.ColorName"
+                                                      style="background:@color.ColorCode"></span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="smart-grid-actions">
+                                        @if (item.StockQuantity > 0)
+                                        {
+                                            <button type="button"
+                                                    class="js-drawer-add-cart"
+                                                    data-product-id="@item.Id"
+                                                    title="Thêm vào giỏ">
+                                                🛒
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" disabled title="Hết hàng">
+                                                ✕
+                                            </button>
+                                        }
+
+                                        <button type="button"
+                                                class="js-add-wishlist"
+                                                data-product-id="@item.Id"
+                                                title="Thêm vào yêu thích">
+                                            ♡
+                                        </button>
+
+                                        <button type="button"
+                                                class="js-add-compare"
+                                                data-product-id="@item.Id"
+                                                title="Thêm vào so sánh">
+                                            ⇄
+                                        </button>
+
+                                        <a asp-controller="Product"
+                                           asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           title="Chi tiết">
+                                            ℹ
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="smart-no-product-box">
+                    Không tìm thấy sản phẩm phù hợp.
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+@functions {
+    private int GetDiscountPercent(Product product)
+    {
+        if (product.OldPrice != null && product.OldPrice > product.Price)
+        {
+            return (int)Math.Round((1 - product.Price / product.OldPrice.Value) * 100);
+        }
+
+        return 0;
+    }
+}
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const collapseButtons = document.querySelectorAll(".smart-filter-collapse");
+
+            collapseButtons.forEach(function(button) {
+                const section = button.closest(".smart-filter-section");
+
+                if (!section) return;
+
+                button.addEventListener("click", function() {
+                    section.classList.toggle("is-collapsed");
+                });
+            });
+        });
+    </script>
+}
