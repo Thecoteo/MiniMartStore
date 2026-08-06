@@ -1,0 +1,98 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using MiniSmartstoreMvc.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var user = await UserManager.GetUserAsync(User);
+    var email = user?.Email ?? User.Identity?.Name ?? "Tài khoản";
+
+    <div class="dropdown ss-user-dropdown">
+        <button class="ss-user-trigger"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <span class="ss-user-trigger-icon ss-icon ss-icon-user"></span>
+            <span class="ss-user-trigger-text">@email</span>
+            <span class="ss-user-trigger-arrow"></span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end ss-user-menu">
+            <li>
+                <a class="dropdown-item"
+                   asp-controller="Customer"
+                   asp-action="Info">
+                    <span class="ss-menu-icon ss-icon ss-icon-user"></span>
+                    <span>Tài khoản của tôi</span>
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item"
+                   asp-controller="Order"
+                   asp-action="Index">
+                    <span class="ss-menu-icon ss-icon ss-icon-order"></span>
+                    <span>Đơn hàng của tôi</span>
+                </a>
+            </li>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <li>
+                    <a class="dropdown-item"
+                       asp-area="Admin"
+                       asp-controller="Dashboard"
+                       asp-action="Index">
+                        <span class="ss-menu-icon ss-icon ss-icon-admin"></span>
+                        <span>Quản trị</span>
+                    </a>
+                </li>
+            }
+
+            <li>
+                <a class="dropdown-item"
+                   asp-controller="Wishlist"
+                   asp-action="Index">
+                    <span class="ss-menu-icon ss-icon ss-icon-heart"></span>
+                    <span>Danh sách yêu thích</span>
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item"
+                   asp-controller="Cart"
+                   asp-action="Index">
+                    <span class="ss-menu-icon ss-icon ss-icon-cart"></span>
+                    <span>Giỏ hàng</span>
+                </a>
+            </li>
+
+            <li>
+                <hr class="dropdown-divider" />
+            </li>
+
+            <li>
+                <form asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                      method="post">
+                    <button type="submit" class="dropdown-item">
+                        <span class="ss-menu-icon ss-icon ss-icon-logout"></span>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+}
+else
+{
+    <a class="ss-login-link"
+       asp-area="Identity"
+       asp-page="/Account/Login">
+        <span class="ss-icon ss-icon-user"></span>
+        <span>Đăng nhập</span>
+    </a>
+}
