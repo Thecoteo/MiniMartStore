@@ -1,0 +1,176 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using MiniSmartstoreMvc.Models
+@model MiniSmartstoreMvc.ViewModels.AdminSalesReportViewModel
+
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+
+    string OrderStatusText(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "Chờ xử lý",
+        OrderStatus.Processing => "Đang xử lý",
+        OrderStatus.Completed => "Hoàn thành",
+        OrderStatus.Cancelled => "Đã hủy",
+        _ => "Không xác định"
+    };
+
+    string PaymentStatusText(PaymentStatus status) => status switch
+    {
+        PaymentStatus.Pending => "Chờ thanh toán",
+        PaymentStatus.Paid => "Đã thanh toán",
+        PaymentStatus.Failed => "Thất bại",
+        PaymentStatus.Cancelled => "Đã hủy",
+        _ => "Không xác định"
+    };
+
+    var orderStatusItems = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "Tất cả trạng thái đơn" }
+    };
+
+    orderStatusItems.AddRange(Enum.GetValues<OrderStatus>().Select(x => new SelectListItem
+    {
+        Value = x.ToString(),
+        Text = OrderStatusText(x),
+        Selected = Model.OrderStatus == x
+    }));
+
+    var paymentStatusItems = new List<SelectListItem>
+    {
+        new SelectListItem { Value = "", Text = "Tất cả trạng thái thanh toán" }
+    };
+
+    paymentStatusItems.AddRange(Enum.GetValues<PaymentStatus>().Select(x => new SelectListItem
+    {
+        Value = x.ToString(),
+        Text = PaymentStatusText(x),
+        Selected = Model.PaymentStatus == x
+    }));
+}
+
+<div class="admin-report-page">
+    <div class="admin-report-shell">
+        <div class="admin-report-header">
+            <div class="admin-report-title">
+                <h1>Báo cáo doanh thu</h1>
+                <p>Theo dõi doanh thu theo ngày, trạng thái đơn hàng và trạng thái thanh toán.</p>
+            </div>
+
+            <div class="admin-report-tabs">
+                <a asp-area="Admin" asp-controller="Report" asp-action="Index">Tổng quan</a>
+                <a asp-area="Admin" asp-controller="Report" asp-action="Sales" class="active">Doanh thu</a>
+                <a asp-area="Admin" asp-controller="Report" asp-action="Products">Sản phẩm</a>
+                <a asp-area="Admin" asp-controller="Report" asp-action="Customers">Khách hàng</a>
+                <a asp-area="Admin" asp-controller="Report" asp-action="Inventory">Tồn kho</a>
+            </div>
+        </div>
+
+        <form method="get" class="admin-report-filter">
+            <div class="admin-report-field">
+                <label>Từ ngày</label>
+                <input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" class="admin-report-control" />
+            </div>
+
+            <div class="admin-report-field">
+                <label>Đến ngày</label>
+                <input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" class="admin-report-control" />
+            </div>
+
+            <div class="admin-report-field">
+                <label>Trạng thái đơn</label>
+                @Html.DropDownList("orderStatus", orderStatusItems, new { @class = "admin-report-control" })
+            </div>
+
+            <div class="admin-report-field">
+                <label>Trạng thái thanh toán</label>
+                @Html.DropDownList("paymentStatus", paymentStatusItems, new { @class = "admin-report-control" })
+            </div>
+
+            <button type="submit" class="admin-report-primary-btn">Lọc báo cáo</button>
+
+            <a asp-area="Admin" asp-controller="Report" asp-action="Sales" class="admin-report-secondary-btn">
+                Đặt lại
+            </a>
+        </form>
+
+        <div class="admin-report-body">
+            <div class="admin-report-stats">
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Tổng doanh thu</div>
+                    <div class="admin-report-stat-value">@Model.TotalRevenue.ToString("N0") đ</div>
+                </div>
+
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Tổng đơn</div>
+                    <div class="admin-report-stat-value">@Model.TotalOrders</div>
+                </div>
+
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Sản phẩm đã bán</div>
+                    <div class="admin-report-stat-value">@Model.TotalSoldQuantity</div>
+                </div>
+
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Đơn hoàn thành</div>
+                    <div class="admin-report-stat-value">@Model.CompletedOrders</div>
+                </div>
+
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Đơn đã hủy</div>
+                    <div class="admin-report-stat-value">@Model.CancelledOrders</div>
+                </div>
+
+                <div class="admin-report-stat">
+                    <div class="admin-report-stat-label">Khoảng thời gian</div>
+                    <div class="admin-report-stat-value">@Model.Rows.Count ngày</div>
+                </div>
+            </div>
+
+            <div class="admin-report-card">
+                <div class="admin-report-card-header">
+                    <div>
+                        <h2>Chi tiết doanh thu theo ngày</h2>
+                        <p>Doanh thu chỉ tính từ đơn hoàn thành hoặc đã thanh toán.</p>
+                    </div>
+                </div>
+
+                <div class="admin-report-table-wrap">
+                    <table class="admin-report-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Số đơn hàng</th>
+                                <th>Sản phẩm đã bán</th>
+                                <th>Doanh thu</th>
+                                <th>Đơn hoàn thành</th>
+                                <th>Đơn đã hủy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Rows.Any())
+                            {
+                                foreach (var item in Model.Rows)
+                                {
+                                    <tr>
+                                        <td>@item.Date.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="admin-report-badge">@item.OrderCount</span></td>
+                                        <td><span class="admin-report-badge">@item.SoldQuantity</span></td>
+                                        <td class="admin-report-money">@item.Revenue.ToString("N0") đ</td>
+                                        <td><span class="admin-report-pill success">@item.CompletedOrders</span></td>
+                                        <td><span class="admin-report-pill danger">@item.CancelledOrders</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="admin-report-empty">Không có dữ liệu doanh thu trong khoảng thời gian này.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,101 @@
+﻿@model IEnumerable<MiniSmartstoreMvc.Models.Category>
+
+@{
+    ViewData["Title"] = "Quản lý danh mục";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Quản lý danh mục</h2>
+
+    <a asp-area="Admin" asp-controller="Category" asp-action="Create" class="btn btn-primary">
+        Thêm danh mục
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Mô tả</th>
+                    <th style="width: 140px;">Số sản phẩm</th>
+                    <th style="width: 120px;">Trạng thái</th>
+                    <th style="width: 180px;">Thao tác</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+
+                            <td>
+                                <strong>@item.Name</strong>
+                            </td>
+
+                            <td>@item.Description</td>
+
+                            <td>
+                                @(item.Products?.Count ?? 0)
+                            </td>
+
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success">Đang hiển thị</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Đã ẩn</span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-area="Admin" asp-controller="Category" asp-action="Edit" asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-warning">
+                                    Sửa
+                                </a>
+
+                                <form asp-area="Admin" asp-controller="Category" asp-action="Delete" asp-route-id="@item.Id"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc muốn xóa danh mục này?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        Xóa
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            Chưa có danh mục nào.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,210 @@
+﻿@model IEnumerable<MiniSmartstoreMvc.Models.Product>
+@using MiniSmartstoreMvc.Models
+
+@{
+    ViewData["Title"] = "Shop";
+
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var products = Model?.ToList() ?? new List<Product>();
+}
+
+<div class="container home-page-v2">
+    <section class="home-welcome">
+        <div class="home-welcome-content">
+            <span class="home-eyebrow">MiniSmartstore</span>
+
+            <h1>Chào mừng đến với MiniSmartstore</h1>
+
+            <p>
+                Website thương mại điện tử mini được xây dựng bằng ASP.NET Core MVC.
+                Khách hàng có thể xem sản phẩm, thêm vào giỏ hàng, lưu yêu thích, so sánh và đặt hàng.
+            </p>
+        </div>
+    </section>
+
+    <section class="home-category-section">
+        <div class="home-section-heading">
+            <h2>Danh mục sản phẩm</h2>
+            <span></span>
+        </div>
+
+        <div class="home-category-grid">
+            @foreach (var item in categories)
+            {
+                <a asp-controller="Product"
+                   asp-action="Index"
+                   asp-route-categoryId="@item.Id"
+                   class="home-category-card">
+                    <div class="home-category-image">
+                        <img src="@GetCategoryImage(item.Name)"
+                             alt="@item.Name"
+                             onerror="this.src='/images/products/no-image.jpg'" />
+                    </div>
+
+                    <h5>@item.Name</h5>
+                </a>
+            }
+        </div>
+    </section>
+
+    <section class="home-featured-section">
+        <div class="home-section-heading center">
+            <span></span>
+            <h2>Sản phẩm nổi bật</h2>
+            <span></span>
+        </div>
+
+        @if (products.Any())
+        {
+            <div class="home-product-grid">
+                @foreach (var item in products)
+                {
+                    var imageUrl = string.IsNullOrWhiteSpace(item.ImageUrl)
+                        ? "/images/products/no-image.jpg"
+                        : item.ImageUrl;
+
+                    var hasDiscount = item.OldPrice != null && item.OldPrice > item.Price;
+                    var discountPercent = hasDiscount
+                        ? Math.Round((1 - item.Price / item.OldPrice!.Value) * 100)
+                        : 0;
+
+                    <article class="home-product-card">
+                        <div class="home-product-image-wrap">
+                            <a asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="home-product-image-link">
+                                <img src="@imageUrl"
+                                     alt="@item.Name"
+                                     onerror="this.src='/images/products/no-image.jpg'" />
+                            </a>
+
+                            @if (hasDiscount && discountPercent > 0)
+                            {
+                                <span class="home-discount-badge">-@discountPercent%</span>
+                            }
+
+                            @if (item.IsFeatured)
+                            {
+                                <span class="home-featured-badge">Nổi bật</span>
+                            }
+                        </div>
+
+                        <div class="home-product-body">
+                            <div class="home-product-category">
+                                @(item.Category?.Name ?? "Sản phẩm")
+                            </div>
+
+                            <a asp-controller="Product"
+                               asp-action="Details"
+                               asp-route-id="@item.Id"
+                               class="home-product-name">
+                                @item.Name
+                            </a>
+
+                            <p class="home-product-description">
+                                @(string.IsNullOrWhiteSpace(item.Description)
+                                    ? "Sản phẩm đang được cập nhật mô tả."
+                                    : item.Description)
+                            </p>
+
+                            <div class="home-delivery-line">
+                                <span></span>
+                                Giao hàng @(string.IsNullOrWhiteSpace(item.DeliveryTime) ? "3 - 5 ngày" : item.DeliveryTime)
+                            </div>
+
+                            <div class="home-product-price">
+                                <strong>@item.Price.ToString("N0") đ</strong>
+
+                                @if (hasDiscount)
+                                {
+                                    <small>Giá cũ: @item.OldPrice!.Value.ToString("N0") đ</small>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="home-product-hover-preview">
+                            <div class="home-preview-top">
+                                <div>
+                                    <div class="home-product-category">
+                                        @(item.Category?.Name ?? "Sản phẩm")
+                                    </div>
+
+                                    <a asp-controller="Product"
+                                       asp-action="Details"
+                                       asp-route-id="@item.Id"
+                                       class="home-product-name">
+                                        @item.Name
+                                    </a>
+                                </div>
+
+                                <strong class="home-preview-price">
+                                    @item.Price.ToString("N0") đ
+                                </strong>
+                            </div>
+
+                            <p class="home-preview-description">
+                                @(string.IsNullOrWhiteSpace(item.Description)
+                                    ? "Xem chi tiết để biết thêm thông tin sản phẩm."
+                                    : item.Description)
+                            </p>
+
+                            <div class="home-preview-actions">
+                                <button type="button"
+                                        class="home-action-btn primary js-drawer-add-cart"
+                                        data-product-id="@item.Id"
+                                        title="Thêm vào giỏ hàng">
+                                    🛒
+                                </button>
+
+                                <button type="button"
+                                        class="home-action-btn js-add-wishlist"
+                                        data-product-id="@item.Id"
+                                        title="Thêm vào yêu thích">
+                                    ♡
+                                </button>
+
+                                <button type="button"
+                                        class="home-action-btn js-add-compare"
+                                        data-product-id="@item.Id"
+                                        title="Thêm vào so sánh">
+                                    ⇄
+                                </button>
+
+                                <a asp-controller="Product"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   class="home-action-btn"
+                                   title="Xem chi tiết">
+                                    i
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="home-empty-product-box">
+                <h4>Chưa có sản phẩm nổi bật</h4>
+                <p>Vui lòng thêm sản phẩm trong trang quản trị.</p>
+            </div>
+        }
+    </section>
+</div>
+
+@functions {
+    private string GetCategoryImage(string categoryName)
+    {
+        return categoryName switch
+        {
+            "Điện thoại" => "/images/products/iphone.jpg",
+            "Laptop" => "/images/products/macbook.jpg",
+            "Phụ kiện" => "/images/products/headphone.jpg",
+            "Thời trang" => "/images/products/no-image.jpg",
+            "Thể thao" => "/images/products/no-image.jpg",
+            _ => "/images/products/no-image.jpg"
+        };
+    }
+}
